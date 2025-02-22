@@ -1,3 +1,4 @@
+
 package com.guercifzone.androidquoraankarim.JsonParser;
 
 import android.content.Context;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Quoraan_1 {
-    //سورة الفاتحة
+   
     public static List<Section> readJsonFile(Context context) {
         List<Section> sectionList = new ArrayList<>();
         try {
@@ -26,8 +27,8 @@ public class Quoraan_1 {
             String jsonString = new String(buffer, "UTF-8");
             JSONObject jsonObject = new JSONObject(jsonString);
             JSONArray sections = jsonObject.getJSONArray("sections");
-            for (int i = 0; i < sections.length(); i++) {
-                JSONObject section = sections.getJSONObject(i);
+            for (int j = 0; j < sections.length(); j++) {
+                JSONObject section = sections.getJSONObject(j);
                 String sectionTitle = section.getString("title");
                 Object content = section.get("content");
 
@@ -36,8 +37,8 @@ public class Quoraan_1 {
                 } else if (content instanceof JSONArray) {
                     StringBuilder contentBuilder = new StringBuilder();
                     JSONArray contentArray = (JSONArray) content;
-                    for (int j = 0; j < contentArray.length(); j++) {
-                        contentBuilder.append(contentArray.getString(j)).append(" ");
+                    for (int k = 0; k < contentArray.length(); k++) {
+                        contentBuilder.append(contentArray.getString(k)).append(" ");
                     }
                     sectionList.add(new Section(sectionTitle, contentBuilder.toString()));
                 }
@@ -47,9 +48,11 @@ public class Quoraan_1 {
         }
         return sectionList;
     }
+
     public static class Section {
         public String title;
         public String content;
+
         public Section(String title, String content) {
             this.title = title;
             this.content = content;
