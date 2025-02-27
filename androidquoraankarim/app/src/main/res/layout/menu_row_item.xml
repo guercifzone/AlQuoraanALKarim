@@ -58,6 +58,7 @@
             android:id="@+id/titleTV"
             android:visibility="gone"
             android:textSize="20sp"
+            android:fontFamily="@font/aalmaghribi"
             android:textColor="@android:color/black"
             android:layout_gravity="center"
             android:gravity="center|left"
