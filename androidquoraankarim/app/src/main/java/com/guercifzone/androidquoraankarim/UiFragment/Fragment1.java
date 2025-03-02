@@ -10,8 +10,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
+
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -20,7 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.guercifzone.androidquoraankarim.JsonParser.Quoraan_1;
+import com.guercifzone.androidquoraankarim.JsonParser.*;
 import com.guercifzone.androidquoraankarim.R;
 
 import java.util.Arrays;
@@ -36,11 +35,9 @@ public class Fragment1 extends Fragment {
     private static final List<String> SUMBOLS_TO_HIGHLIGHT = Arrays.asList("");
    //قواعد القراءة
     private static final List<String> ROLS_TO_HIGHLIGHT = Arrays.asList("");
-private EditText searchEditText;
-private Button searchButton;
-private LinearLayout dynamicContentLayout;
+
 private ScaleGestureDetector scaleGestureDetector;
-    private List<Quoraan_1.Section> sections;
+
 private int currentFontSize = 26;
 private float scaleFactor = 1.0f;
 
@@ -55,19 +52,63 @@ private float scaleFactor = 1.0f;
 
         View root = inflater.inflate(R.layout.fragment_main, container, false);
         LinearLayout linearLayout = root.findViewById(R.id.linearLayout);
-        dynamicContentLayout = root.findViewById(R.id.dynamicContentLayout);
-        searchEditText = root.findViewById(R.id.searchEditText);
-        searchButton = root.findViewById(R.id.searchButton);
-        sections = Quoraan_1.readJsonFile(requireContext());
-
         List<Quoraan_1.Section> sections = Quoraan_1.readJsonFile(requireContext());
-        loadContent(sections);
-        searchButton.setOnClickListener(v->{
-            String searchQuery = searchEditText.getText().toString().trim();
-if (!searchQuery.isEmpty()) {
-    searchContent(searchQuery);
-}
-        });
+        for (Quoraan_1.Section section : sections) {
+            TextView titleTextView = new TextView(requireContext());
+            titleTextView.setText(section.getTitle());
+            titleTextView.setTextSize(25);
+            titleTextView.setTypeface(null, android.graphics.Typeface.BOLD);
+            titleTextView.setTextColor(getResources().getColor(R.color.red));
+            titleTextView.setTypeface(this.getResources().getFont(R.font.aalmaghribi));
+            titleTextView.setPadding(16, 16, 16, 8);
+            String contentText = section.getContent();
+            SpannableString spannableContent = new SpannableString(contentText);
+
+
+            // Loop through the list of words to highlight
+            for (String word : NUMBERS_TO_HIGHLIGHT) {
+                Pattern pattern = Pattern.compile(word, Pattern.CASE_INSENSITIVE);
+                Matcher matcher = pattern.matcher(contentText);
+
+                while (matcher.find()) {
+                    int startIndex = matcher.start();
+                    int endIndex = matcher.end();
+                    spannableContent.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.green)),
+                            startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            }
+            for (String word : SUMBOLS_TO_HIGHLIGHT) {
+                Pattern pattern = Pattern.compile(word, Pattern.CASE_INSENSITIVE);
+                Matcher matcher = pattern.matcher(contentText);
+                while (matcher.find()) {
+                    int startIndex = matcher.start();
+                    int endIndex = matcher.end();
+                    spannableContent.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.blue)),
+                            startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            }
+            for (String word : ROLS_TO_HIGHLIGHT) {
+                Pattern pattern = Pattern.compile(word, Pattern.CASE_INSENSITIVE);
+                Matcher matcher = pattern.matcher(contentText);
+                while (matcher.find()) {
+                    int startIndex = matcher.start();
+                    int endIndex = matcher.end();
+                    spannableContent.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.orange)),
+                            startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            }
+            // Create a TextView for the content
+            TextView contentTextView = new TextView(requireContext());
+
+            contentTextView.setText(spannableContent);
+            contentTextView.setTextSize(currentFontSize);
+            contentTextView.setTextColor(getResources().getColor(R.color.black));
+            contentTextView.setTypeface(this.getResources().getFont(R.font.aalmaghribi));
+            contentTextView.setPadding(8, 8, 8, 8);
+            // Add the TextViews to the LinearLayout
+            linearLayout.addView(titleTextView);
+            linearLayout.addView(contentTextView);
+        }
         SeekBar seekBar = root.findViewById(R.id.fontSizeSeekBar);
         TextView fontSizeTextView = root.findViewById(R.id.fontSizeTextView);
         fontSizeTextView.setText("Font size : " + currentFontSize);
@@ -104,104 +145,8 @@ if (!searchQuery.isEmpty()) {
         return root;
     }
 
-    private void searchContent(String searchQuery) {
-        dynamicContentLayout.removeAllViews();
-        for (Quoraan_1.Section section : sections) {
-            if (section.getTitle().toLowerCase().contains(searchQuery.toLowerCase()) ||
-                    section.getContent().toLowerCase().contains(searchQuery.toLowerCase())) {
-
-                // Display matching section
-                TextView titleTextView = new TextView(requireContext());
-                titleTextView.setText(section.getTitle());
-                titleTextView.setTextSize(20);
-                titleTextView.setTypeface(null, android.graphics.Typeface.BOLD);
-                titleTextView.setTextColor(getResources().getColor(R.color.red));
-
-                TextView contentTextView = new TextView(requireContext());
-                String contentText = section.getContent();
-                SpannableString spannableContent = new SpannableString(contentText);
-
-                // Highlight search results
-                Pattern pattern = Pattern.compile(searchQuery, Pattern.CASE_INSENSITIVE);
-                Matcher matcher = pattern.matcher(contentText);
-                while (matcher.find()) {
-                    int startIndex = matcher.start();
-                    int endIndex = matcher.end();
-                    spannableContent.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.blue)),
-                            startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-
-                contentTextView.setText(spannableContent);
-                contentTextView.setTextSize(18);
-                contentTextView.setTextColor(getResources().getColor(R.color.black));
-
-                dynamicContentLayout.addView(titleTextView);
-                dynamicContentLayout.addView(contentTextView);
-            }
-        }
-    }
-    private void loadContent(List<Quoraan_1.Section> sections) {
-    dynamicContentLayout.removeAllViews();
-        for (Quoraan_1.Section section : sections) {
-            TextView titleTextView = new TextView(requireContext());
-            titleTextView.setText(section.getTitle());
-            titleTextView.setTextSize(25);
-            titleTextView.setTypeface(null, android.graphics.Typeface.BOLD);
-            titleTextView.setTextColor(getResources().getColor(R.color.red));
-            titleTextView.setTypeface(this.getResources().getFont(R.font.aalmaghribi));
-            titleTextView.setPadding(16, 16, 16, 8);
-
-            TextView contentTextView = new TextView(requireContext());
-
-            // Create a SpannableString to style the content text
-            String contentText = section.getContent();
-            SpannableString spannableContent = new SpannableString(contentText);
 
 
-            // Loop through the list of words to highlight
-            for (String word : NUMBERS_TO_HIGHLIGHT) {
-                Pattern pattern = Pattern.compile(word, Pattern.CASE_INSENSITIVE);
-                Matcher matcher = pattern.matcher(contentText);
-
-                while (matcher.find()) {
-                    int startIndex = matcher.start();
-                    int endIndex = matcher.end();
-                    spannableContent.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.green)),
-                            startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-            }
-            for (String word : SUMBOLS_TO_HIGHLIGHT) {
-                Pattern pattern = Pattern.compile(word, Pattern.CASE_INSENSITIVE);
-                Matcher matcher = pattern.matcher(contentText);
-                while (matcher.find()) {
-                    int startIndex = matcher.start();
-                    int endIndex = matcher.end();
-                    spannableContent.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.blue)),
-                            startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-            }
-            for (String word : ROLS_TO_HIGHLIGHT) {
-                Pattern pattern = Pattern.compile(word, Pattern.CASE_INSENSITIVE);
-                Matcher matcher = pattern.matcher(contentText);
-                while (matcher.find()) {
-                    int startIndex = matcher.start();
-                    int endIndex = matcher.end();
-                    spannableContent.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.blue)),
-                            startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-            }
-
-            contentTextView.setText(spannableContent);
-            contentTextView.setTextSize(currentFontSize);
-            contentTextView.setTextColor(getResources().getColor(R.color.black));
-            contentTextView.setTypeface(this.getResources().getFont(R.font.aalmaghribi));
-            contentTextView.setPadding(8, 8, 8, 8);
-
-            // Add the TextViews to the LinearLayout
-            dynamicContentLayout.addView(titleTextView);
-            dynamicContentLayout.addView(contentTextView);
-        }
-    }
     @Override
     public void onResume() {
         super.onResume();
