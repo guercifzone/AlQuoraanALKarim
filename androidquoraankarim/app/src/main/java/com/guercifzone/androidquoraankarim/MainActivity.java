@@ -20,7 +20,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     SNavigationDrawer SNavigationDrawer;
-    int color1 = 0;
+
     Class fragmentClass;
     public static Fragment fragment;
     @SuppressLint("MissingInflatedId")
@@ -168,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
                         fragmentClass = Fragment1.class;
                         break;
                     }
+                    /*
                     case 1: {
                         fragmentClass = Fragment2.class;
                         break;
@@ -615,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
                     case 112: {
                         fragmentClass = Fragment113.class;
                         break;
-                    }
+                    }*/
                 }
 
 
