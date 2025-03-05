@@ -43,6 +43,7 @@
                 android:id="@+id/titleTV1"
                 android:textColor="@android:color/white"
                 android:layout_marginRight="20dp"
+                android:fontFamily="@font/aalmaghribi"
                 android:maxLines="1"
                 android:ellipsize="end"/>
         </androidx.cardview.widget.CardView>
