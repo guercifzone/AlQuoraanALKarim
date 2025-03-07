@@ -1,22 +1,20 @@
 package org.guercifzone;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+
 
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
-public class Dashboard extends JFrame {
+public class Dashboard_sql extends JFrame {
     private JList<String> userList;
     private JLabel nameLabel;
-    private JTextPane contentTextPane; // Changed to JTextPane
+    private JTextPane contentTextPane;
 
-    public Dashboard() {
+    public Dashboard_sql() {
         setTitle("المصحف المحمدي الشريف");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -27,7 +25,7 @@ public class Dashboard extends JFrame {
         splitPane.setDividerLocation(600);
         splitPane.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
-        JPanel rightPanel  = new JPanel(new BorderLayout());
+        JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         userList = new JList<>();
         userList.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
@@ -56,7 +54,7 @@ public class Dashboard extends JFrame {
 
         add(splitPane);
 
-        // Load data from JSON
+        // Load data from MySQL
         loadData();
 
         // Add selection listener to the list
@@ -73,38 +71,47 @@ public class Dashboard extends JFrame {
     }
 
     private void loadData() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("data.json");
-             InputStreamReader reader = new InputStreamReader(inputStream)) {
-            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonArray users = jsonObject.getAsJsonArray("sowar");
+        List<String> userNames = new ArrayList<>();
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/sowar_db", "username", "password");
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("SELECT name FROM sowar")) {
+
+            while (resultSet.next()) {
+                userNames.add(resultSet.getString("name"));
+            }
 
             DefaultListModel<String> listModel = new DefaultListModel<>();
-            for (int i = 0; i < users.size(); i++) {
-                JsonObject user = users.get(i).getAsJsonObject();
-                listModel.addElement(user.get("name").getAsString());
+            for (String userName : userNames) {
+                listModel.addElement(userName);
             }
             userList.setModel(listModel);
-        } catch (Exception e) {
+
+        } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "خطأ في تحميل البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "خطأ في تحميل البيانات من قاعدة البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void displayUserDetails(int index) {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("data.json");
-             InputStreamReader reader = new InputStreamReader(inputStream)) {
-            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonArray users = jsonObject.getAsJsonArray("sowar");
-            JsonObject user = users.get(index).getAsJsonObject();
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/sowar_db", "username", "password");
+             PreparedStatement preparedStatement = connection.prepareStatement("SELECT name, content FROM sowar WHERE id = ?")) {
 
-            nameLabel.setText("السورة: " + user.get("name").getAsString());
-            String content =  user.get("content").getAsString().trim();
+            // Get the ID based on the selected index (in this case, just using index as id for simplicity)
+            preparedStatement.setInt(1, index + 1);
 
-            // Apply colorization to numbers
-            colorizeNumbers(content);
-        } catch (Exception e) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    String name = resultSet.getString("name");
+                    String content = resultSet.getString("content").trim();
+
+                    nameLabel.setText("السورة: " + name);
+                    colorizeNumbers(content);
+                }
+            }
+
+        } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "خطأ في تحميل البيانات", "× خطأ ×", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "خطأ في تحميل التفاصيل من قاعدة البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -158,7 +165,6 @@ public class Dashboard extends JFrame {
             e.printStackTrace();
         }
     }
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Dashboard());

@@ -9,14 +9,15 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.ArrayList;
 
-public class Dashboard extends JFrame {
+public class Dashboard_ extends JFrame {
     private JList<String> userList;
     private JLabel nameLabel;
     private JTextPane contentTextPane; // Changed to JTextPane
 
-    public Dashboard() {
+    public Dashboard_() {
         setTitle("المصحف المحمدي الشريف");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -56,8 +57,8 @@ public class Dashboard extends JFrame {
 
         add(splitPane);
 
-        // Load data from JSON
-        loadData();
+        // Load data from JSON asynchronously
+        loadDataAsync();
 
         // Add selection listener to the list
         userList.addListSelectionListener(e -> {
@@ -72,22 +73,48 @@ public class Dashboard extends JFrame {
         setVisible(true);
     }
 
-    private void loadData() {
+    private void loadDataAsync() {
+        // Use a SwingWorker to load data in the background
+        SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<String> doInBackground() throws Exception {
+                return loadUserNames();  // Load data in background thread
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<String> userNames = get();
+                    DefaultListModel<String> listModel = new DefaultListModel<>();
+                    for (String userName : userNames) {
+                        listModel.addElement(userName);
+                    }
+                    userList.setModel(listModel);  // Update UI with loaded data
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(Dashboard_.this, "خطأ في تحميل البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private List<String> loadUserNames() {
+        List<String> userNames = new ArrayList<>();
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("data.json");
              InputStreamReader reader = new InputStreamReader(inputStream)) {
             JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
             JsonArray users = jsonObject.getAsJsonArray("sowar");
 
-            DefaultListModel<String> listModel = new DefaultListModel<>();
             for (int i = 0; i < users.size(); i++) {
                 JsonObject user = users.get(i).getAsJsonObject();
-                listModel.addElement(user.get("name").getAsString());
+                userNames.add(user.get("name").getAsString());
             }
-            userList.setModel(listModel);
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "خطأ في تحميل البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException("Error loading data", e);
         }
+        return userNames;
     }
 
     private void displayUserDetails(int index) {
@@ -158,7 +185,6 @@ public class Dashboard extends JFrame {
             e.printStackTrace();
         }
     }
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Dashboard());

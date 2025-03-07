@@ -27,6 +27,7 @@ public class Main {
         }
 
         // Start your application
-        SwingUtilities.invokeLater(() -> new Dashboard());
+       SwingUtilities.invokeLater(() -> new Dashboard_());
+     //   SwingUtilities.invokeLater(() -> new Dashboard_sql());
     }
 }
