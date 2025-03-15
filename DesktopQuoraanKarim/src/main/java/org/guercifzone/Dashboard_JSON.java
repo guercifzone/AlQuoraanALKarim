@@ -12,12 +12,12 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.ArrayList;
 
-public class Dashboard_ extends JFrame {
+public class Dashboard_JSON extends JFrame {
     private JList<String> userList;
     private JLabel nameLabel;
     private JTextPane contentTextPane; // Changed to JTextPane
 
-    public Dashboard_() {
+    public Dashboard_JSON() {
         setTitle("المصحف المحمدي الشريف");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -92,7 +92,7 @@ public class Dashboard_ extends JFrame {
                     userList.setModel(listModel);  // Update UI with loaded data
                 } catch (Exception e) {
                     e.printStackTrace();
-                    JOptionPane.showMessageDialog(Dashboard_.this, "خطأ في تحميل البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(Dashboard_JSON.this, "خطأ في تحميل البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -128,14 +128,14 @@ public class Dashboard_ extends JFrame {
             String content =  user.get("content").getAsString().trim();
 
             // Apply colorization to numbers
-            colorizeNumbers(content);
+           colorizeNumbers(content);
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "خطأ في تحميل البيانات", "× خطأ ×", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void colorizeNumbers(String text) {
+ private void colorizeNumbers(String text) {
         StyledDocument doc = contentTextPane.getStyledDocument();
 
         // Style for numbers (red color)
@@ -187,6 +187,6 @@ public class Dashboard_ extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Dashboard());
+        SwingUtilities.invokeLater(() -> new Dashboard_DOCX());
     }
 }

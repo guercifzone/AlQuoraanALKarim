@@ -9,12 +9,12 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Dashboard_sql extends JFrame {
+public class Dashboard_SQL extends JFrame {
     private JList<String> userList;
     private JLabel nameLabel;
     private JTextPane contentTextPane;
 
-    public Dashboard_sql() {
+    public Dashboard_SQL() {
         setTitle("المصحف المحمدي الشريف");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -167,6 +167,6 @@ public class Dashboard_sql extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Dashboard());
+        SwingUtilities.invokeLater(() -> new Dashboard_DOCX());
     }
 }

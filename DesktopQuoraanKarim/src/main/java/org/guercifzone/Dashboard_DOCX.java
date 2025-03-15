@@ -1,22 +1,22 @@
 package org.guercifzone;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
-public class Dashboard extends JFrame {
+public class Dashboard_DOCX extends JFrame {
     private JList<String> userList;
     private JLabel nameLabel;
-    private JTextPane contentTextPane; // Changed to JTextPane
+    private JTextPane contentTextPane;
 
-    public Dashboard() {
+    public Dashboard_DOCX() {
         setTitle("المصحف المحمدي الشريف");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -27,7 +27,7 @@ public class Dashboard extends JFrame {
         splitPane.setDividerLocation(600);
         splitPane.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
-        JPanel rightPanel  = new JPanel(new BorderLayout());
+        JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         userList = new JList<>();
         userList.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
@@ -38,9 +38,9 @@ public class Dashboard extends JFrame {
         leftPanel.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
 
         nameLabel = new JLabel();
-        nameLabel.setHorizontalAlignment(SwingConstants.RIGHT); // Align text to the right
+        nameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        contentTextPane = new JTextPane(); // Changed to JTextPane
+        contentTextPane = new JTextPane();
         contentTextPane.setEditable(false);
         contentTextPane.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
         contentTextPane.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -56,8 +56,8 @@ public class Dashboard extends JFrame {
 
         add(splitPane);
 
-        // Load data from JSON
-        loadData();
+        // Load data from DOCX files asynchronously
+        loadDataAsync();
 
         // Add selection listener to the list
         userList.addListSelectionListener(e -> {
@@ -72,33 +72,69 @@ public class Dashboard extends JFrame {
         setVisible(true);
     }
 
-    private void loadData() {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("data.json");
-             InputStreamReader reader = new InputStreamReader(inputStream)) {
-            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonArray users = jsonObject.getAsJsonArray("sowar");
-
-            DefaultListModel<String> listModel = new DefaultListModel<>();
-            for (int i = 0; i < users.size(); i++) {
-                JsonObject user = users.get(i).getAsJsonObject();
-                listModel.addElement(user.get("name").getAsString());
+    private void loadDataAsync() {
+        // Use a SwingWorker to load data in the background
+        SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<String> doInBackground() throws Exception {
+                return loadUserNamesFromDOCX();  // Load data from DOCX files
             }
-            userList.setModel(listModel);
+
+            @Override
+            protected void done() {
+                try {
+                    List<String> userNames = get();
+                    DefaultListModel<String> listModel = new DefaultListModel<>();
+                    for (String userName : userNames) {
+                        listModel.addElement(userName);
+                    }
+                    userList.setModel(listModel);  // Update UI with loaded data
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(Dashboard_DOCX.this, "خطأ في تحميل البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private List<String> loadUserNamesFromDOCX() {
+        List<String> userNames = new ArrayList<>();
+        try {
+            // List all DOCX files to load
+            List<String> docxFiles = Arrays.asList("data1.docx", "data2.docx");  // Example of two DOCX files
+
+            for (String fileName : docxFiles) {
+                InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
+                XWPFDocument document = new XWPFDocument(inputStream);
+
+                // Extract paragraphs
+                List<XWPFParagraph> paragraphs = document.getParagraphs();
+                for (XWPFParagraph paragraph : paragraphs) {
+                    userNames.add(paragraph.getText());
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "خطأ في تحميل البيانات", "خطأ", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException("Error loading data from DOCX", e);
         }
+        return userNames;
     }
 
     private void displayUserDetails(int index) {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("data.json");
-             InputStreamReader reader = new InputStreamReader(inputStream)) {
-            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonArray users = jsonObject.getAsJsonArray("sowar");
-            JsonObject user = users.get(index).getAsJsonObject();
+        try {
+            // Load the DOCX files
+            List<String> docxFiles = Arrays.asList("data1.docx", "data2.docx");
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(docxFiles.get(index % docxFiles.size()));  // Choose DOCX file based on index
+            XWPFDocument document = new XWPFDocument(inputStream);
 
-            nameLabel.setText("السورة: " + user.get("name").getAsString());
-            String content =  user.get("content").getAsString().trim();
+            // Extract paragraphs
+            List<XWPFParagraph> paragraphs = document.getParagraphs();
+            XWPFParagraph selectedParagraph = paragraphs.get(index);
+
+            // Set the name and content
+            nameLabel.setText("السورة: " + selectedParagraph.getText());
+            String content = selectedParagraph.getText().trim();
 
             // Apply colorization to numbers
             colorizeNumbers(content);
@@ -159,8 +195,7 @@ public class Dashboard extends JFrame {
         }
     }
 
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Dashboard());
+        SwingUtilities.invokeLater(() -> new Dashboard_DOCX());
     }
 }
